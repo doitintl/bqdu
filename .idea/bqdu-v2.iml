@@ -10,5 +10,11 @@
     <orderEntry type="library" name="angular-aria" level="application" />
     <orderEntry type="library" name="angular-material" level="application" />
     <orderEntry type="library" name="angular-animate" level="application" />
+    <orderEntry type="library" name="client" level="application" />
+    <orderEntry type="library" name="jquery" level="application" />
+    <orderEntry type="library" name="angular" level="application" />
+    <orderEntry type="library" name="angular-animate" level="application" />
+    <orderEntry type="library" name="angular-aria" level="application" />
+    <orderEntry type="library" name="angular-material" level="application" />
   </component>
 </module>

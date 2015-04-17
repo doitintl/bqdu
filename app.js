@@ -20,7 +20,7 @@ ga('send', 'pageview');
 google.load("visualization", "1", {packages: ["treemap"]});
 
 function showFullTooltip(row, size, value) {
-    return '<div style="background:#fd9; padding:10px; border-style:solid; border-color:white">' + 'Size: ' + numberWithCommas(Math.round(chartData.getValue(row, 2))) + ' GB' + '<br> Row: ' + numberWithCommas(Math.round(chartData.getValue(row, 3))) + 'M' + '</div>';
+    return '<div style="background:#fd9; padding:10px; border-style:solid; border-color:white">' + 'Size: ' + numberWithCommas(Math.round(chartData.getValue(row, 2)/1024/1024/1024)) + ' GB' + '<br> Row: ' + numberWithCommas(Math.round(chartData.getValue(row, 3)/1000000)) + 'M' + '</div>';
 }
 
 // number formatting
@@ -31,21 +31,15 @@ function numberWithCommas(x) {
 // User Submitted Variables
 var project_id = 'doit-intl.com:ezrakhovichg2';
 var client_id = '968052747331-6rhnplku61s0aokfjdsil04v7c5clck1.apps.googleusercontent.com';
+var email;
 
 var config = {
     'client_id': client_id,
-    'scope': 'https://www.googleapis.com/auth/bigquery'
+    'scope': 'https://www.googleapis.com/auth/bigquery https://www.googleapis.com/auth/userinfo.email'
 };
 
-function showProjects() {
-    var request = gapi.client.bigquery.projects.list();
-    request.execute(function (response) {
-        $('#result_box').html(JSON.stringify(response, null));
-    });
-}
-
 function getTableData(projectId, success, failed) {
-    var projectId = "glowing-indexer-494";
+    var projectId;
     var data = [['table', 'dataset', 'size', 'rows'], [projectId, null, 0, 0]];
     var index = 2;
     var dataset_index = 0;
@@ -58,7 +52,7 @@ function getTableData(projectId, success, failed) {
     var tableRes = 0;
     var tableCalls = 0;
 
-    function onGetTableInfo(response){
+    function onGetTableInfo(response) {
         tableRes++;
         var dataset = this;
         var tableRows = parseInt(response.numRows) / 1000000; // get number of rows in millions
@@ -78,7 +72,9 @@ function getTableData(projectId, success, failed) {
 
         totalSize = totalSize + tableSize; // calculate total size of all tables in all datasets
         totalRows = totalRows + tableRows; // calculate total rows of all tables in all datasets
-        if (tableCalls == tableRes) {success(data)}
+        if (tableCalls == tableRes) {
+            success(data)
+        }
     }
 
     function onGetTables(response) {
@@ -99,8 +95,8 @@ function getTableData(projectId, success, failed) {
                 });
                 request.execute(onGetTableInfo.bind(dataset));
             });
-                data[index] = [dataset.datasetReference.datasetId, projectId, dsSize, dsRows];
-                index++;
+            data[index] = [dataset.datasetReference.datasetId, projectId, dsSize, dsRows];
+            index++;
 
             dsSize = 0;
         }
@@ -115,7 +111,7 @@ function getTableData(projectId, success, failed) {
             if (!dataset) return;
             //current_dataset = dataset;
             var request = gapi.client.bigquery.tables.list({
-                projectId: projectId, datasetId: dataset.datasetReference.datasetId, maxResults: 100
+                projectId: projectId, datasetId: dataset.datasetReference.datasetId, maxResults: 500
             });
 
             request.execute(onGetTables.bind(dataset));
@@ -126,41 +122,39 @@ function getTableData(projectId, success, failed) {
     }
 
     // Fetching all datasets for given project
-    var request = gapi.client.bigquery.datasets.list({projectId: projectId}, {maxResults: 100});
+    var request = gapi.client.bigquery.datasets.list({projectId: projectId}, {maxResults: 500});
     request.execute(onGetDatasets);
-}
-
-function auth() {
-    gapi.auth.authorize(config, function () {
-        gapi.client.load('bigquery', 'v2');
-        $('#client_initiated').html('BigQuery client initiated');
-        $('#auth_button').fadeOut();
-        $('#projects_button').fadeIn();
-        $('#dataset_button').fadeIn();
-        $('#table_info_button').fadeIn();
-    });
 }
 
 var app = angular.module('app', ['ngMaterial']);
 
 app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', function ($scope, $mdSidenav, $mdDialog, $timeout) {
-    //$scope.$apply(function()
-    //  {
-    $scope.timeoutMsg = "Fetching your projects...just a sec...";
-    $scope.projectId = "plexop-gcp-01";
-    //  })
 
-    //google.script.run.withSuccessHandler(getProjectsSuccess).withFailureHandler(getProjectsFailed).getProjects();
+    $scope.auth = function () {
+        gapi.auth.authorize(config, function () {
+            gapi.client.load('bigquery', 'v2');
+            $('#client_initiated').html('BigQuery client initiated');
 
-    function getProjectsSuccess(projectList) {
-        $scope.$apply(function () {
-            $scope.timeoutMsg = "Select Project ID";
-            $scope.projectList = projectList;
-            debugger;
+            gapi.client.load('oauth2', 'v2', function () {
+                gapi.client.oauth2.userinfo.get()
+                    .execute(function (resp) {
+                        // Shows user email
+                        $timeout(function () {
+                            $scope.email = resp.email;
+                        });
+                        getProjects();
+                    });
+            });
         });
-    }
+    };
 
-    function getProjectsFailed() {
+    function getProjects() {
+        //var projectList = [];
+        index = 0;
+        var request = gapi.client.bigquery.projects.list({maxResults: 500});
+        request.execute(function (response) {
+            $scope.projectList = response.projects;
+        });
     }
 
     $scope.toggleSidenav = function (menuId) {
@@ -171,9 +165,9 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', func
 
         $scope.showProgress = true;
 
-        getTableData($scope.projectId, drawChart, callbackfailed);
+        getTableData($scope.projectId, drawChart, badluck);
 
-        function callbackfailed(e) {
+        function badluck(e) {
             $scope.showProgress = false;
             $mdDialog.show(
                 $mdDialog.alert()
@@ -186,7 +180,7 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', func
         }
 
         function drawChart(data) {
-            console.log('draw chart: %O', data);
+            //console.log('draw chart: %O', data);
             window.rowdata = data;
             $timeout(function () {
                 $scope.showProgress = false;
@@ -201,6 +195,7 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', func
                 maxColor: '#1976D2',
                 headerHeight: 15,
                 fontColor: 'white',
+                fontSize: 14,
                 showScale: false,
                 maxDepth: 1,
                 showTooltips: true,
@@ -209,15 +204,8 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', func
             })
 
         }
-                window.draw = drawChart;
     };
+}
 
-    function onSuccessEmail(email) {
-        $scope.$apply(function () {
-            $scope.email = email
-        });
-    }
-
-    //google.script.run.withSuccessHandler(onSuccessEmail).getUser();
-
-}]);
+])
+;
