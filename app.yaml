@@ -15,3 +15,7 @@ handlers:
 - url: /app.js
   static_files: app.js
   upload: app.js
+
+- url: /favicon.ico
+  static_files: favicon.ico
+  upload: favicon.ico
