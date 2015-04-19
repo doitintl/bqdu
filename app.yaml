@@ -19,3 +19,7 @@ handlers:
 - url: /favicon.ico
   static_files: favicon.ico
   upload: favicon.ico
+
+- url: /menu.svg
+  static_files: menu.svg
+  upload: menu.svg
