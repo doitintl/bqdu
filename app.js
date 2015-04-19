@@ -233,7 +233,7 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
                 maxColor: '#1976D2',
                 headerHeight: 15,
                 fontColor: 'white',
-                fontSize: 14,
+                fontSize: 12,
                 showScale: false,
                 maxDepth: 1,
                 showTooltips: true,
