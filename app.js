@@ -20,7 +20,15 @@ ga('send', 'pageview');
 google.load("visualization", "1", {packages: ["treemap"]});
 
 function showFullTooltip(row, size, value) {
-    return '<div style="background:#fd9; padding:10px; border-style:solid; border-color:white">' + 'Size: ' + numberWithCommas(Math.round(chartData.getValue(row, 2)/1024/1024/1024)) + ' GB' + '<br> Row: ' + numberWithCommas(Math.round(chartData.getValue(row, 3)/1000000)) + 'M' + '</div>';
+    var tableName = chartData.getValue(row, 0);
+    //console.log(tableName);
+        if (tableName.indexOf(".")!=-1)
+        {
+            return '<div style="background:#fd9; padding:10px; border-style:solid; border-color:white">' + '<u>Identity: ' + tableName.split(".")[1] + '</u><br>' + 'Size: ' + numberWithCommas(Math.round(chartData.getValue(row, 2))) + ' GB' + '<br> Row: ' + numberWithCommas(Math.round(chartData.getValue(row, 3))) + 'M' + '</div>'
+        }
+        else {
+            return '<div style="background:#fd9; padding:10px; border-style:solid; border-color:white">' + '<u>Identity: ' + tableName + '</u><br>' + 'Size: ' + numberWithCommas(Math.round(chartData.getValue(row, 2))) + ' GB' + '<br> Row: ' + numberWithCommas(Math.round(chartData.getValue(row, 3))) + 'M' + '</div>'
+        }
 }
 
 // number formatting
@@ -37,95 +45,6 @@ var config = {
     'client_id': client_id,
     'scope': 'https://www.googleapis.com/auth/bigquery https://www.googleapis.com/auth/userinfo.email'
 };
-
-function getTableData(projectId, success, failed) {
-    var projectId;
-    var data = [['table', 'dataset', 'size', 'rows'], [projectId, null, 0, 0]];
-    var index = 2;
-    var dataset_index = 0;
-    var dsSize = 0;
-    var dsRows = 0;
-    var totalSize = 0; // total data in project
-    var totalRows = 0; // total rows in project
-    var ntables = 0; // total number of tables in project
-    var datasets;
-    var tableRes = 0;
-    var tableCalls = 0;
-
-    function onGetTableInfo(response) {
-        tableRes++;
-        var dataset = this;
-        var tableRows = parseInt(response.numRows) / 1000000; // get number of rows in millions
-        var tableSize = parseInt(response.numBytes) / 1024 / 1024 / 1024; // get size of the table in GB
-        if (isNaN(tableSize)) {
-            tableSize = 0;
-        }
-
-        data[index] = [{
-            v: response.result.id,
-            f: response.tableReference.tableId
-        }, dataset.datasetReference.datasetId, parseInt(response.numBytes), parseInt(response.numRows)];
-        index++;
-
-        dsSize = dsSize + tableSize;
-        dsRows = dsRows + tableRows;
-
-        //totalSize = totalSize + tableSize; // calculate total size of all tables in all datasets;
-        //totalRows = totalRows + tableRows; // calculate total rows of all tables in all datasets;
-
-        if (tableCalls == tableRes) {
-            success(data)
-        }
-    }
-
-    function onGetTables(response) {
-        var dataset = this;
-        var tables = response.tables;
-
-        // if tables exist in dataset, get tableSize & tableRows from each table
-        if (tables) {
-            dataset_index++;
-
-            tables.forEach(function (table) {
-                tableCalls++;
-                current_table = table;
-                var request = gapi.client.bigquery.tables.get({
-                    projectId: projectId,
-                    datasetId: dataset.datasetReference.datasetId,
-                    tableId: table.tableReference.tableId
-                });
-                request.execute(onGetTableInfo.bind(dataset));
-            });
-            data[index] = [dataset.datasetReference.datasetId, projectId, dsSize, dsRows];
-            index++;
-
-            dsSize = 0;
-        }
-    }
-
-    function onGetDatasets(response) {
-        var datasets = response.datasets;
-        if (!datasets) return;
-
-        // Fetching all tables from each dataset
-        datasets.forEach(function (dataset) {
-            if (!dataset) return;
-            //current_dataset = dataset;
-            var request = gapi.client.bigquery.tables.list({
-                projectId: projectId, datasetId: dataset.datasetReference.datasetId, maxResults: 500
-            });
-
-            request.execute(onGetTables.bind(dataset));
-
-            //ntables = ntables + tables.tables.length; // not sure I still need it
-
-        });
-    }
-
-    // Fetching all datasets for given project
-    var request = gapi.client.bigquery.datasets.list({projectId: projectId}, {maxResults: 500});
-    request.execute(onGetDatasets);
-}
 
 var app = angular.module('app', ['ngMaterial']);
 
@@ -174,8 +93,6 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
                         try {
                             if (dsResponse.result.datasets.length != 0)
                             {
-                                //console.log(proj.id, dsResponse.result.datasets.length);
-
                                 myProjects.push(proj);
                             }
                         } catch(e) {}
@@ -187,11 +104,132 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
 
             $q.all(promises).then(function(){
                 $timeout(function () {
-                    console.log(myProjects);
+                    //console.log(myProjects);
                     $scope.projectList = myProjects;
                     $scope.projectMsg = "Please select Project ID..."});
 
             });
+        });
+    }
+
+    function getTableData(projectId, success, failed) {
+        var data = [['table', 'dataset', 'size', 'rows'], [projectId, null, 0, 0]];
+
+        function getTableInfo (projectId, dataset, table)
+        {
+            var d = $q.defer();
+            var request = gapi.client.bigquery.tables.get(
+                {
+                    projectId: projectId,
+                    datasetId: dataset.datasetReference.datasetId,
+                    tableId: table.tableReference.tableId
+                });
+            request.execute(function (response)
+            {
+                var tableRows = parseInt(response.numRows) / 1000000; // get number of rows in millions
+                var tableSize = parseInt(response.numBytes) / 1024 / 1024 / 1024; // get size of the table in GB
+                if (isNaN(tableSize)) {
+                    tableSize = 0;
+                }
+
+                data.push([{
+                    v: response.result.id,
+                    f: response.tableReference.tableId}, dataset.datasetReference.datasetId, tableSize, tableRows]);
+
+                d.resolve({size: tableSize, rows: tableRows});
+
+            });
+            return d.promise;
+        }
+
+        function getTables (projectId, dataset, tables) {
+            var d = $q.defer();
+            var promises = [];
+
+            var dsSize = 0;
+            var dsRows = 0;
+
+            // if tables exist in dataset, get tableSize & tableRows from each table
+            if (tables)
+            {
+
+                tables.forEach(function (table) {
+
+                    var p = getTableInfo(projectId, dataset, table)
+                    .then(function (res){
+                        dsSize+=res.size;
+                        dsRows+=res.rows;
+                    });
+                    promises.push(p);
+                });
+                $q.all(promises).then(function (){
+                    d.resolve({size:dsSize, rows:dsRows});
+                });
+            } else {
+                d.resolve();
+                }
+            return d.promise;
+        }
+
+        function onEachDataset(dataset)
+        {
+            var d = $q.defer();
+
+            if (!dataset) return;
+            //current_dataset = dataset;
+            var request = gapi.client.bigquery.tables.list({
+                projectId: projectId, datasetId: dataset.datasetReference.datasetId, maxResults: 500
+            });
+
+            request.execute(function (res) {
+                getTables(projectId, dataset, res.tables).then(function (result){
+                    if (result) {
+                        data.push([dataset.datasetReference.datasetId, projectId, result.size, result.rows]);
+                        console.log(data.length);
+
+                    } else
+                    {
+                        result = {size:0, rows:0};
+                    }
+                    d.resolve(result);
+                });
+            });
+                    return d.promise;
+        }
+
+        function onGetDatasets(response) {
+
+            var d = $q.defer();
+            var promises = [];
+
+            var totalSize = 0;
+            var totalRows = 0;
+
+            var datasets = response.datasets;
+            if (!datasets) return;
+
+            // Fetching all tables from each dataset
+            datasets.forEach(function (dataset){
+                promises.push(onEachDataset(dataset));
+            });
+                $q.all(promises).then(function (globalSize){
+                    globalSize.forEach(function (size)
+                    {
+                        totalSize+=size.size;
+                        totalRows+=size.rows;
+                    });
+                    data[1][2] = totalSize;
+                    data[1][3] = totalRows;
+                    d.resolve(data);
+                });
+
+            return d.promise;
+        }
+
+        // Fetching all datasets for given project
+        var request = gapi.client.bigquery.datasets.list({projectId: projectId}, {maxResults: 500});
+        request.execute(function (res){
+            onGetDatasets(res).then(success);
         });
     }
 
@@ -217,11 +255,14 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
             $scope.projectId = "";
         }
 
+        window.drawChart = drawChart;
+
         function drawChart(data) {
-            //console.log('draw chart: %O', data);
+            console.log('draw chart: %O', data);
             window.rowdata = data;
             $timeout(function () {
                 $scope.showProgress = false;
+
             });
 
             chartData = google.visualization.arrayToDataTable(data);
@@ -238,9 +279,7 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
                 maxDepth: 1,
                 showTooltips: true,
                 generateTooltip: showFullTooltip
-
             })
-
         }
     };
 }
