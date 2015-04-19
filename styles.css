@@ -1,22 +1,51 @@
-.menuBtn {
-    background-color: transparent;
-    border: none;
-    height: 38px;
-    margin: 16px 0 0 16px;
-    width: 36px;
+.md-toolbar-tools > .md-icon-button:first-child {
+    margin-right: 16px;
 }
-
 md-toolbar h1 {
     font-weight: normal;
 }
 
-md-list .md-button {
-    color: inherit;
-    font-weight: 500;
+md-sidenav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+md-sidenav ul md-icon, md-sidenav ul img {
+    width: 36px;
+    height: 36px;
+    margin: auto 1em;
+}
+md-sidenav p {
     text-align: left;
-    width: 100%;
+}
+img.rounded {
+    border-radius: 50%;
+}
+div.profile div {
+    padding: 0 .75em;
+}
+div.profile .email {
+    font-size: .75em;
+    color: #A9A9A9;
 }
 
-.menuBtn {
-    background: transparent url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPGcgaWQ9IkhlYWRlciI+CiAgICA8Zz4KICAgICAgICA8cmVjdCB4PSItNjE4IiB5PSItMjIzMiIgZmlsbD0ibm9uZSIgd2lkdGg9IjE0MDAiIGhlaWdodD0iMzYwMCIvPgogICAgPC9nPgo8L2c+CjxnIGlkPSJMYWJlbCI+CjwvZz4KPGcgaWQ9Ikljb24iPgogICAgPGc+CiAgICAgICAgPHJlY3QgZmlsbD0ibm9uZSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ii8+CiAgICAgICAgPHBhdGggZD0iTTMsMThoMTh2LTJIM1YxOHogTTMsMTNoMTh2LTJIM1YxM3ogTTMsNnYyaDE4VjZIM3oiIHN0eWxlPSJmaWxsOiNmM2YzZjM7Ii8+CiAgICA8L2c+CjwvZz4KPGcgaWQ9IkdyaWQiIGRpc3BsYXk9Im5vbmUiPgogICAgPGcgZGlzcGxheT0iaW5saW5lIj4KICAgIDwvZz4KPC9nPgo8L3N2Zz4=) no-repeat  center center;
+.analyze {
+    margin-left: 1em;
+}
+
+.treemap {
+    margin:1em;
+}
+
+.projectList {
+    margin-bottom: 1em;
+}
+
+.progressBar {
+    margin-top: 1em;
+    padding-right: 1em;
+}
+
+.appName {
+    font-size: 1.3em;
 }

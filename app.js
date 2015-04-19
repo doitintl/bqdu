@@ -70,8 +70,9 @@ function getTableData(projectId, success, failed) {
         dsSize = dsSize + tableSize;
         dsRows = dsRows + tableRows;
 
-        totalSize = totalSize + tableSize; // calculate total size of all tables in all datasets
-        totalRows = totalRows + tableRows; // calculate total rows of all tables in all datasets
+        //totalSize = totalSize + tableSize; // calculate total size of all tables in all datasets;
+        //totalRows = totalRows + tableRows; // calculate total rows of all tables in all datasets;
+
         if (tableCalls == tableRes) {
             success(data)
         }
@@ -128,7 +129,7 @@ function getTableData(projectId, success, failed) {
 
 var app = angular.module('app', ['ngMaterial']);
 
-app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', function ($scope, $mdSidenav, $mdDialog, $timeout) {
+app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q', function ($scope, $mdSidenav, $mdDialog, $timeout, $q) {
 
     $scope.auth = function () {
         gapi.auth.authorize(config, function () {
@@ -140,7 +141,11 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', func
                     .execute(function (resp) {
                         // Shows user email
                         $timeout(function () {
+                            $scope.User = true;
+                            $scope.name = resp.name;
+                            $scope.picture = resp.picture;
                             $scope.email = resp.email;
+                            $scope.projectMsg = "Fetching your projects..."
                         });
                         getProjects();
                     });
@@ -149,11 +154,44 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', func
     };
 
     function getProjects() {
-        //var projectList = [];
-        index = 0;
-        var request = gapi.client.bigquery.projects.list({maxResults: 500});
+        var promises = [];
+        var request = gapi.client.bigquery.projects.list({maxResults: 500, fields:"projects/id"});
         request.execute(function (response) {
-            $scope.projectList = response.projects;
+
+            var myProjects = [];
+
+            for (var p = 0; p < response.projects.length; p++)
+            {
+                var request = gapi.client.bigquery.datasets.list({projectId: response.projects[p].id});
+
+                promises.push(doReq(request, response.projects[p]))
+
+                function doReq(req, proj)
+                {
+                    var d = $q.defer();
+
+                    request.execute(function(dsResponse) {
+                        try {
+                            if (dsResponse.result.datasets.length != 0)
+                            {
+                                //console.log(proj.id, dsResponse.result.datasets.length);
+
+                                myProjects.push(proj);
+                            }
+                        } catch(e) {}
+                        d.resolve();
+                    });
+                        return d.promise;
+                }
+            }
+
+            $q.all(promises).then(function(){
+                $timeout(function () {
+                    console.log(myProjects);
+                    $scope.projectList = myProjects;
+                    $scope.projectMsg = "Please select Project ID..."});
+
+            });
         });
     }
 
