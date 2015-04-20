@@ -51,25 +51,6 @@ var app = angular.module('app', ['ngMaterial']);
 
 app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q', function ($scope, $mdSidenav, $mdDialog, $timeout, $q) {
 
-    $scope.auth2 = function () {
-        //fbase.authWithOAuthPopup("google", function(error, authData) {
-        //        if (error)
-        //        {
-        //            console.log("Login Failed!", error);
-        //        }
-        //        else
-        //        {
-        //            //console.log("Authenticated successfully with payload:", authData);
-        //            $scope.auth();
-        //        }
-        //    },
-        //    {
-        //        remember: "default",
-        //        scope: "https://www.googleapis.com/auth/bigquery, https://www.googleapis.com/auth/userinfo.email"
-        //    }
-        //);
-    };
-
     $scope.auth = function () {
         gapi.auth.authorize(config, function () {
             gapi.client.load('bigquery', 'v2');
