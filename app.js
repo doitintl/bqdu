@@ -39,6 +39,7 @@ function numberWithCommas(x) {
 // User Submitted Variables
 var project_id = 'doit-intl.com:ezrakhovichg2';
 var client_id = '968052747331-6rhnplku61s0aokfjdsil04v7c5clck1.apps.googleusercontent.com';
+var fbase = new Firebase("https://bqdu.firebaseio.com/");
 var email;
 
 var config = {
@@ -50,10 +51,28 @@ var app = angular.module('app', ['ngMaterial']);
 
 app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q', function ($scope, $mdSidenav, $mdDialog, $timeout, $q) {
 
+    $scope.auth2 = function () {
+        //fbase.authWithOAuthPopup("google", function(error, authData) {
+        //        if (error)
+        //        {
+        //            console.log("Login Failed!", error);
+        //        }
+        //        else
+        //        {
+        //            //console.log("Authenticated successfully with payload:", authData);
+        //            $scope.auth();
+        //        }
+        //    },
+        //    {
+        //        remember: "default",
+        //        scope: "https://www.googleapis.com/auth/bigquery, https://www.googleapis.com/auth/userinfo.email"
+        //    }
+        //);
+    };
+
     $scope.auth = function () {
         gapi.auth.authorize(config, function () {
             gapi.client.load('bigquery', 'v2');
-            $('#client_initiated').html('BigQuery client initiated');
 
             gapi.client.load('oauth2', 'v2', function () {
                 gapi.client.oauth2.userinfo.get()
@@ -64,7 +83,7 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
                             $scope.name = resp.name;
                             $scope.picture = resp.picture;
                             $scope.email = resp.email;
-                            $scope.projectMsg = "Fetching your projects..."
+                            $scope.projectMsg = "Fetching your projects...";
                         });
                         getProjects();
                     });
@@ -185,7 +204,7 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
                 getTables(projectId, dataset, res.tables).then(function (result){
                     if (result) {
                         data.push([dataset.datasetReference.datasetId, projectId, result.size, result.rows]);
-                        console.log(data.length);
+                        //console.log(data.length);
 
                     } else
                     {
@@ -218,8 +237,14 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
                         totalSize+=size.size;
                         totalRows+=size.rows;
                     });
+
                     data[1][2] = totalSize;
+                    $scope.totalSize = totalSize; // putting into the scope for logging
                     data[1][3] = totalRows;
+                    $scope.totalRows = totalRows; // putting into the scope for logging
+
+                    $scope.totalDatasets = datasets.length;
+                    $scope.totalTables = data.length - $scope.totalDatasets;
                     d.resolve(data);
                 });
 
@@ -236,6 +261,25 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
     $scope.toggleSidenav = function (menuId) {
         $mdSidenav(menuId).toggle();
     };
+
+    $scope.logData = function()
+    {
+        var now = new Date();
+        fbase.push({
+                                runDate:now.toString(),
+                                email:$scope.email,
+                                name: $scope.name,
+                                picture:$scope.picture,
+                                projectID: $scope.projectId,
+                                totalSize:$scope.totalSize,
+                                totalRows:$scope.totalRows,
+                                storageEst:$scope.totalSize*0.02,
+                                totalDatasets:$scope.totalDatasets,
+                                totalTables:$scope.totalTables,
+                                totalProjects:$scope.projectList.length
+                            });
+    };
+
 
     $scope.analyze = function () {
 
@@ -258,8 +302,8 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
         window.drawChart = drawChart;
 
         function drawChart(data) {
-            console.log('draw chart: %O', data);
-            window.rowdata = data;
+            //console.log('draw chart: %O', data);
+            //window.rowdata = data;
             $timeout(function () {
                 $scope.showProgress = false;
 
@@ -280,6 +324,8 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
                 showTooltips: true,
                 generateTooltip: showFullTooltip
             })
+
+            $scope.logData();
         }
     };
 }
