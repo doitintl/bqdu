@@ -24,10 +24,34 @@ module.exports = function(grunt) {
 				'footer': ''
 			}
 		},
+        copy: {
+            html: {
+                src: '*.html',
+                dest: 'dist/',
+            },
+            styles: {
+                src: '*.css',
+                dest: 'dist/',
+            },
+            images: {
+                src: '*.svg',
+                dest: 'dist/',
+            },
+            yaml: {
+                src: '*.yaml',
+                dest: 'dist/',
+            },
+            favicon: {
+                src: '*.ico',
+                dest: 'dist/',
+            },
+        },
+        clean: ["dist/"]
 	});
 
 	grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-clean');
 
-	grunt.registerTask('default', ['uglify']);
+	grunt.registerTask('default', ['clean','copy','uglify']);
 };
