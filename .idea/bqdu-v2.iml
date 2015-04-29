@@ -16,5 +16,7 @@
     <orderEntry type="library" name="angular-animate" level="application" />
     <orderEntry type="library" name="angular-aria" level="application" />
     <orderEntry type="library" name="angular-material" level="application" />
+    <orderEntry type="library" name="firebase" level="application" />
+    <orderEntry type="library" name="bqdu node_modules" level="project" />
   </component>
 </module>

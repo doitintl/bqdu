@@ -37,7 +37,6 @@ function numberWithCommas(x) {
 }
 
 // User Submitted Variables
-var project_id = 'doit-intl.com:ezrakhovichg2';
 var client_id = '968052747331-6rhnplku61s0aokfjdsil04v7c5clck1.apps.googleusercontent.com';
 var fbase = new Firebase("https://bqdu.firebaseio.com/");
 var email;
