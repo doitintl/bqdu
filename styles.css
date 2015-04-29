@@ -35,6 +35,8 @@ div.profile .email {
 
 .treemap {
     margin:1em;
+    width:100%;
+    height:600px;
 }
 
 .projectList {

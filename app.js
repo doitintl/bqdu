@@ -103,8 +103,9 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
 
             $q.all(promises).then(function(){
                 $timeout(function () {
-                    //console.log(myProjects);
                     $scope.projectList = myProjects;
+                    $scope.projectList.push({id: "publicdata"}); // BigQuery Public Sample Datasets
+                    $scope.projectList.push({id: "fh-bigquery"}); // More BigQuery Public Sample Datasets
                     $scope.projectMsg = "Please select Project ID..."});
 
             });
