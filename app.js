@@ -80,7 +80,7 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
 
             for (var p = 0; p < response.projects.length; p++)
             {
-                var request = gapi.client.bigquery.datasets.list({projectId: response.projects[p].id});
+                var request = gapi.client.bigquery.datasets.list({projectId: response.projects[p].id,all:true});
 
                 promises.push(doReq(request, response.projects[p]))
 
@@ -232,7 +232,7 @@ app.controller('AppCtrl', ['$scope', '$mdSidenav', '$mdDialog', '$timeout', '$q'
         }
 
         // Fetching all datasets for given project
-        var request = gapi.client.bigquery.datasets.list({projectId: projectId}, {maxResults: 500});
+        var request = gapi.client.bigquery.datasets.list({projectId: projectId}, {all:true,maxResults: 1000});
         request.execute(function (res){
             onGetDatasets(res).then(success);
         });
