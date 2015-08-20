@@ -1,4 +1,4 @@
 #!/bin/bash
 grunt
 gcloud config set project bqdu-app
-gcloud preview app deploy dist/app.yaml
+gcloud preview app deploy -q dist/app.yaml --set-default
